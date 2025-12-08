@@ -11,3 +11,4 @@ wordcloud
 click
 tqdm
 requests
+json5
