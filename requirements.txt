@@ -1,0 +1,13 @@
+transformers
+torch
+selenium
+beautifulsoup4
+feedparser
+pandas
+numpy
+scikit-learn
+matplotlib
+wordcloud
+click
+tqdm
+requests
