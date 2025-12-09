@@ -5,16 +5,16 @@ CLI
 ```
 pip install -r requirements.txt
 
-python -m src.text_insights.cli collect-youtube \
+python -m src.cli collect-youtube \
   --video-url "https://youtu.be/..." \
   --out data/raw/youtube.jsonl
 
-python -m src.text_insights.cli analyze \
+python -m src.cli analyze \
   --storage data/raw/youtube.jsonl \
   --out-dir data/processed \
   --use-hf
 
-python -m src.text_insights.cli generate-report \
+python -m src.cli generate-report \
   --sentiment-jsonl data/processed/youtube_sentiment.jsonl \
   --out-html data/processed/report.html \
   --top-global data/processed/top_global.json \
@@ -24,9 +24,10 @@ python -m src.text_insights.cli generate-report \
 
 ```
 
+
 python module
 ```
-from src.text_insights.pipeline import FullPipeline
+from src.pipeline import FullPipeline
 
 pipeline = FullPipeline(
     source="youtube",
