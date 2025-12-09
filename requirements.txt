@@ -1,14 +1,25 @@
-transformers
-torch
-selenium
+# core
+requests
 beautifulsoup4
 feedparser
-pandas
+tqdm
+click
+
+# selenium for YouTube parsing
+selenium
+undetected-chromedriver
+
+# NLP / ML
 numpy
+pandas
 scikit-learn
+scipy
+joblib
+vaderSentiment
+transformers
+torch
+sentence-transformers  # optional, heavy
+
+# visualization
 matplotlib
 wordcloud
-click
-tqdm
-requests
-json5
