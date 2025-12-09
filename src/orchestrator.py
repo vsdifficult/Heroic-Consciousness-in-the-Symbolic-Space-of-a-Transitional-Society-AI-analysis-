@@ -7,6 +7,12 @@ from tqdm import tqdm
 import json
 import os
 
+try:
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+    HF_AVAILABLE = True
+except ImportError:
+    HF_AVAILABLE = False
+
 class PipelineOrchestrator:
     def __init__(self, storage_path: str, sentiment_impl="vader", use_hf=False, hf_device=-1):
         self.storage = JSONLStorage(storage_path)

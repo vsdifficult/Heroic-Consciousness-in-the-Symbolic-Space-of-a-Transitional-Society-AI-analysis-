@@ -3,6 +3,12 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import math
 import logging
 
+try:
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+    HF_AVAILABLE = True
+except ImportError:
+    HF_AVAILABLE = False
+    
 # Transformers optional
 try:
     from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
