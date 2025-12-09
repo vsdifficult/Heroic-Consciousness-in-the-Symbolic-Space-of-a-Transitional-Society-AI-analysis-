@@ -13,41 +13,30 @@ class PipelineOrchestrator:
         self.sentiment = get_default_sentiment(use_hf and HF_AVAILABLE, device=hf_device) if 'HF_AVAILABLE' in globals() else get_default_sentiment(False)
         self.freq_acc = FrequencyAccumulator()
         self.lda = OnlineLDA(n_topics=10)
-        self.by_source_freq = {}  # source -> FrequencyAccumulator
+        self.by_source_freq = {}  
         self._temp_text_batch = []
         self._batch_size = 256
 
     def ingest_stream(self, items: Iterable[Dict]):
-        """
-        Stream items (dicts) into storage and update accumulators.
-        items: iterable of dict with at least 'text' and optional 'source'
-        """
         for item in items:
             # store raw
             self.storage.append(item)
-            # update global frequency
             text = item.get("text","")
             self.freq_acc.add_text(text)
             src = item.get("source","all")
             if src not in self.by_source_freq:
                 self.by_source_freq[src] = FrequencyAccumulator()
             self.by_source_freq[src].add_text(text)
-            # LDA partial fit in batches
             self._temp_text_batch.append(text)
             if len(self._temp_text_batch) >= self._batch_size:
                 self.lda.partial_fit(self._temp_text_batch)
                 self._temp_text_batch = []
 
-        # final partial fit
         if self._temp_text_batch:
             self.lda.partial_fit(self._temp_text_batch)
             self._temp_text_batch = []
 
     def analyze_sentiment(self, batch_size=256, use_hf=False):
-        """
-        Stream over storage and compute sentiment in batches; produce new JSONL with sentiment appended.
-        Returns path to sentiment-enriched file.
-        """
         out_path = self.storage.path.with_name(self.storage.path.stem + "_sentiment.jsonl")
         tmp = []
         i = 0
@@ -66,7 +55,6 @@ class PipelineOrchestrator:
                         fout.write(json.dumps(r_out, ensure_ascii=False) + "\n")
                     batch = []
                 i += 1
-            # last
             if batch:
                 ids, recs = zip(*batch)
                 texts = [r.get("text","") for r in recs]
@@ -79,11 +67,9 @@ class PipelineOrchestrator:
 
     def export_reports(self, out_dir: str):
         os.makedirs(out_dir, exist_ok=True)
-        # global top tokens
         top_global = self.freq_acc.most_common(200)
         with open(os.path.join(out_dir, "top_global.json"), "w", encoding="utf-8") as f:
             json.dump(top_global, f, ensure_ascii=False, indent=2)
-        # per-source
         per_src = {}
         for src, acc in self.by_source_freq.items():
             per_src[src] = acc.most_common(200)
@@ -93,7 +79,6 @@ class PipelineOrchestrator:
         topics = self.lda.get_topics(10)
         with open(os.path.join(out_dir, "topics.json"), "w", encoding="utf-8") as f:
             json.dump(topics, f, ensure_ascii=False, indent=2)
-        # return paths
         return {
             "top_global": os.path.join(out_dir, "top_global.json"),
             "per_source": os.path.join(out_dir, "per_source_top.json"),

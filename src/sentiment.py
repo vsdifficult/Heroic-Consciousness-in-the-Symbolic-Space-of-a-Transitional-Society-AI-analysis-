@@ -38,7 +38,6 @@ class HFSentiment(ISentiment):
 
     def analyze_batch(self, texts: List[str]) -> List[Dict]:
         out = []
-        # pipeline handles batching internally, but we chunk manually for control
         n = len(texts)
         batch = BATCH_SIZE
         for i in range(0, n, batch):

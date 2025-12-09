@@ -3,11 +3,6 @@ from typing import Iterator, Dict
 from pathlib import Path
 
 class JSONLStorage:
-    """
-    Хранение/чтение комментариев в формате JSON Lines.
-    Каждый комментарий - отдельная JSON-строка: {"source":"youtube", "id": "...", "text":"...", ...}
-    Это позволяет читать файл построчно без загрузки всего в память.
-    """
     def __init__(self, path: str):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)

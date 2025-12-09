@@ -47,7 +47,6 @@ def collect_rss(rss_url, out):
 def analyze(storage, out_dir, use_hf):
     os.makedirs(out_dir, exist_ok=True)
     orchestrator = PipelineOrchestrator(storage, use_hf=use_hf)
-    # ingest existing storage (this will also build freq/lda)
     orchestrator.ingest_stream(orchestrator.storage.iter())
     sent_path = orchestrator.analyze_sentiment()
     print("Sentiment enriched file:", sent_path)
@@ -61,7 +60,6 @@ def wordcloud_top(top_json, out_png):
     import json
     with open(top_json, "r", encoding="utf-8") as f:
         data = json.load(f)
-    # data is list of (token, count)
     from collections import Counter
     c = Counter(dict(data))
     make_wordcloud_from_counter(c, out_png)
