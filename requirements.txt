@@ -10,6 +10,7 @@ selenium
 undetected-chromedriver
 
 # NLP / ML
+nltk
 numpy
 pandas
 scikit-learn

@@ -1,5 +1,6 @@
 from src.scrapers.youtube_selenium import YouTubeCommentsSaver
 from src.analysis.sentiment import YouTubeSentimentAnalyzer
+from src.analysis.wordclouds import WordCloudGenerator
 import json
 
 
@@ -14,16 +15,27 @@ if __name__ == "__main__":
     #     debug=True
     # )
     
-    analyzer = YouTubeSentimentAnalyzer()
+    # analyzer = YouTubeSentimentAnalyzer()
     
-    results = analyzer.analyze_from_json(
+    # results = analyzer.analyze_from_json(
+    #     json_file='comments.json',
+    #     output_plot='sentiment_hybrid_analysis.png',
+    #     use_lstm_smoothing=True,
+    #     lstm_hidden_size=64,
+    #     lstm_layers=2,
+    #     lstm_epochs=100,
+    #     batch_size=8
+    # ) 
+
+    world_cloud = WordCloudGenerator() 
+    world_cloud.generate_wordcloud(
         json_file='comments.json',
-        output_plot='sentiment_hybrid_analysis.png',
-        use_lstm_smoothing=True,
-        lstm_hidden_size=64,
-        lstm_layers=2,
-        lstm_epochs=100,
-        batch_size=8
+        output_file='wordcloud.png',
+        max_words=100,
+        background_color='white',
+        width=800,
+        height=400
     )
+
     print("\nАнализ завершен!")
-    print(json.dumps(results, indent=2, ensure_ascii=False))
+    # print(json.dumps(results, indent=2, ensure_ascii=False))
