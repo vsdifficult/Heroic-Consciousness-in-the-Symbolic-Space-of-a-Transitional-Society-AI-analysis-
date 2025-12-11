@@ -10,10 +10,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from transformers import AutoTokenizer, AutoModel
-import torch 
-import matplotlib.pyplot as plt 
-from scipy.signal import savgol_filter
 
 # Для стабильности используйте undetected_chromedriver:
 try:

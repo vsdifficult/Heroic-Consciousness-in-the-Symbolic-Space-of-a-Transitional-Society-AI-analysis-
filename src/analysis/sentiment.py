@@ -1,3 +1,8 @@
+from transformers import AutoModel, AutoTokenizer 
+import torch, json
+from typing import List, Dict 
+import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
 
 class SentimentAnalyzer:
     """Базовый класс для анализа тональности"""

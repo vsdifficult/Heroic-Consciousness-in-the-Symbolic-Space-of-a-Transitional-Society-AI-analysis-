@@ -23,3 +23,7 @@ sentence-transformers  # optional, heavy
 # visualization
 matplotlib
 wordcloud
+
+
+v2ray2proxy 
+requests[socks]
