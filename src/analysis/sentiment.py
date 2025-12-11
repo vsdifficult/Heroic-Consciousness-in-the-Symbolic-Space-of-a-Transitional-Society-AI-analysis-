@@ -1,4 +1,4 @@
-from transformers import AutoModel, AutoTokenizer 
+from transformers import AutoModelForSequenceClassification, AutoTokenizer 
 import torch
 import torch.nn as nn
 import json
@@ -40,7 +40,7 @@ class SentimentAnalyzer:
         # Трансформер для анализа тональности
         self.model_name = model_name
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        self.model = AutoModel.from_pretrained(
+        self.model = AutoModelForSequenceClassification.from_pretrained(
             self.model_name, 
             trust_remote_code=True, 
             attn_implementation='eager'
@@ -115,7 +115,7 @@ class SentimentAnalyzer:
         optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
         criterion = nn.MSELoss()
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode='min', factor=0.5, patience=5, verbose=False
+            optimizer, mode='min', factor=0.5, patience=5
         )
         
         # Early stopping

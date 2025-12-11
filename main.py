@@ -4,15 +4,15 @@ import json
 
 
 if __name__ == "__main__":
-    scraper = YouTubeCommentsSaver(headless=True, slow_mode=True)
-    video_url = "https://www.youtube.com/watch?v=VRVMfldS8gs"
-    scraper.save_to_json(
-        video_url=video_url,
-        output_file="comments.json",
-        scroll_pause=2.0,
-        max_comments=100, 
-        debug=True
-    )
+    # scraper = YouTubeCommentsSaver(headless=True, slow_mode=True)
+    # video_url = "https://www.youtube.com/watch?v=RxqP1XxeyjY"
+    # scraper.save_to_json(
+    #     video_url=video_url,
+    #     output_file="comments.json",
+    #     scroll_pause=2.0,
+    #     max_comments=100, 
+    #     debug=True
+    # )
     
     analyzer = YouTubeSentimentAnalyzer()
     
