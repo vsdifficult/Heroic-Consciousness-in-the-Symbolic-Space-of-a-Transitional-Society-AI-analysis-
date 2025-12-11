@@ -178,8 +178,9 @@ class YouTubeSentimentAnalyzer(SentimentAnalyzer):
             data = json.load(f)
         return data.get('comments', [])
 
-    def analyze_from_json(self, json_file: str, 
+    def analyze_from_json(self, json_file: str,
                          output_plot: str = 'sentiment_analysis.png',
+                         output_pie_chart: str = 'sentiment_pie_chart.png',
                          use_lstm_smoothing: bool = True,
                          lstm_hidden_size: int = 64,
                          lstm_layers: int = 2,
@@ -191,6 +192,7 @@ class YouTubeSentimentAnalyzer(SentimentAnalyzer):
         Args:
             json_file: путь к JSON файлу с комментариями
             output_plot: путь для сохранения графика
+            output_pie_chart: путь для сохранения круговой диаграммы
             use_lstm_smoothing: использовать LSTM сглаживание
             lstm_hidden_size: размер скрытого слоя LSTM
             lstm_layers: количество слоев LSTM
@@ -245,8 +247,29 @@ class YouTubeSentimentAnalyzer(SentimentAnalyzer):
         # Статистика
         results = self._calculate_statistics(comments, sentiments, filtered_sentiments, output_plot)
         self._print_statistics(results)
+
+        # Создаем круговую диаграмму
+        self._create_pie_chart(results, output_pie_chart)
+        results['output_pie_chart'] = output_pie_chart
         
         return results
+
+    def _create_pie_chart(self, results: Dict, output_pie_chart: str):
+        """Создает и сохраняет круговую диаграмму распределения тональности"""
+        labels = ['Позитивные', 'Нейтральные', 'Негативные']
+        sizes = [results['positive_percentage'], results['neutral_percentage'], results['negative_percentage']]
+        colors = ['#2ecc71', '#f1c40f', '#e74c3c']
+        explode = (0.05, 0, 0)  # "взорвать" первый кусок
+
+        plt.figure(figsize=(8, 8), dpi=150)
+        plt.pie(sizes, explode=explode, labels=labels, colors=colors,
+                autopct='%1.1f%%', shadow=True, startangle=140)
+        plt.title('Распределение тональности комментариев', fontsize=14, fontweight='bold')
+        plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        plt.savefig(output_pie_chart)
+        plt.close()
+
+        print(f"✓ Круговая диаграмма сохранена: {output_pie_chart}")
     
     def _create_plot(self, sentiments: List[float], filtered: List[float], 
                     output_plot: str, use_smoothing: bool):

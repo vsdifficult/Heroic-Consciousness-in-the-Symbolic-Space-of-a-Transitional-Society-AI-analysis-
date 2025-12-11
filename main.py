@@ -5,7 +5,7 @@ import json
 
 if __name__ == "__main__":
     # scraper = YouTubeCommentsSaver(headless=True, slow_mode=True)
-    # video_url = "https://www.youtube.com/watch?v=RxqP1XxeyjY"
+    # video_url = "https://www.youtube.com/watch?v=2quS1cbZ0_Q"
     # scraper.save_to_json(
     #     video_url=video_url,
     #     output_file="comments.json",
