@@ -15,10 +15,15 @@ if __name__ == "__main__":
     )
     
     analyzer = YouTubeSentimentAnalyzer()
+    
     results = analyzer.analyze_from_json(
-        json_file="comments.json",
-        output_plot="sentiment_analysis.png",
-        use_ensemble=False
+        json_file='comments.json',
+        output_plot='sentiment_hybrid_analysis.png',
+        use_lstm_smoothing=True,
+        lstm_hidden_size=64,
+        lstm_layers=2,
+        lstm_epochs=100,
+        batch_size=8
     )
     print("\nАнализ завершен!")
     print(json.dumps(results, indent=2, ensure_ascii=False))
