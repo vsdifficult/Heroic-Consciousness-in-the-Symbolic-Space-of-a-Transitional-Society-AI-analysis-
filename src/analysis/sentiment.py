@@ -107,7 +107,7 @@ class YouTubeSentimentAnalyzer(SentimentAnalyzer):
         print(f"Анализирую тональность {len(texts)} комментариев...")
         sentiments = self.predict_sentiment(texts)
         
-        # Применяем фильтрацию
+    # Применяем фильтрациюz
         if use_ensemble and len(sentiments) > 10:
             print("Применяю ансамблевую фильтрацию...")
             filtered_sentiments = self.ensemble_filter(sentiments)

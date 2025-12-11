@@ -27,3 +27,4 @@ wordcloud
 
 v2ray2proxy 
 requests[socks]
+chromedriver-autoinstaller

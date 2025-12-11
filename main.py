@@ -1,15 +1,17 @@
 from src.scrapers.youtube_selenium import YouTubeCommentsSaver
-from src.analysis.youtube_sentiment import YouTubeSentimentAnalyzer
+from src.analysis.sentiment import YouTubeSentimentAnalyzer
 import json
 
 
 if __name__ == "__main__":
-    scraper = YouTubeCommentsSaver(headless=True)
-    video_url = "https://www.youtube.com/watch?v=YOUR_VIDEO_ID"
+    scraper = YouTubeCommentsSaver(headless=True, slow_mode=True)
+    video_url = "https://www.youtube.com/watch?v=VRVMfldS8gs"
     scraper.save_to_json(
         video_url=video_url,
         output_file="comments.json",
-        max_comments=100
+        scroll_pause=2.0,
+        max_comments=100, 
+        debug=True
     )
     
     analyzer = YouTubeSentimentAnalyzer()
@@ -18,6 +20,5 @@ if __name__ == "__main__":
         output_plot="sentiment_analysis.png",
         use_ensemble=False
     )
-    
     print("\nАнализ завершен!")
     print(json.dumps(results, indent=2, ensure_ascii=False))
