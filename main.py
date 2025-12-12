@@ -15,17 +15,13 @@ if __name__ == "__main__":
     #     debug=True
     # )
     
-    # analyzer = YouTubeSentimentAnalyzer()
+    analyzer = YouTubeSentimentAnalyzer()
     
-    # results = analyzer.analyze_from_json(
-    #     json_file='comments.json',
-    #     output_plot='sentiment_hybrid_analysis.png',
-    #     use_lstm_smoothing=True,
-    #     lstm_hidden_size=64,
-    #     lstm_layers=2,
-    #     lstm_epochs=100,
-    #     batch_size=8
-    # ) 
+    results = analyzer.analyze_from_json(
+        json_file='comments.json',
+        output_plot='sentiment_hybrid_analysis.png',
+        batch_size=8
+    ) 
 
     world_cloud = WordCloudGenerator() 
     world_cloud.generate_wordcloud(
@@ -38,4 +34,4 @@ if __name__ == "__main__":
     )
 
     print("\nАнализ завершен!")
-    # print(json.dumps(results, indent=2, ensure_ascii=False))
+    print(json.dumps(results, indent=2, ensure_ascii=False))

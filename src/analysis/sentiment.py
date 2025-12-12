@@ -1,40 +1,15 @@
 from transformers import AutoModelForSequenceClassification, AutoTokenizer 
 import torch
-import torch.nn as nn
 import json
 from typing import List, Dict 
 import matplotlib.pyplot as plt
 import numpy as np
 
-class LSTMSmoother(nn.Module):
-    """LSTM модель для сглаживания временного ряда тональности"""
-    
-    def __init__(self, hidden_size: int = 32, num_layers: int = 2, dropout: float = 0.2):
-        super(LSTMSmoother, self).__init__()
-        self.lstm = nn.LSTM(
-            input_size=1,
-            hidden_size=hidden_size,
-            num_layers=num_layers,
-            batch_first=True,
-            bidirectional=True,
-            dropout=dropout if num_layers > 1 else 0
-        )
-        self.fc = nn.Linear(hidden_size * 2, 1)
-        self.dropout = nn.Dropout(dropout)
-        
-    def forward(self, x):
-        # x shape: (batch, seq_len, 1)
-        lstm_out, _ = self.lstm(x)
-        lstm_out = self.dropout(lstm_out)
-        # lstm_out shape: (batch, seq_len, hidden_size * 2)
-        out = self.fc(lstm_out)
-        return out.squeeze(-1)
-
 
 class SentimentAnalyzer:
-    """Гибридный класс: Трансформер для анализа + LSTM для сглаживания"""
+    """Класс для анализа тональности текстов с использованием трансформера"""
     
-    def __init__(self, model_name: str = 'Tochka-AI/ruRoPEBert-classic-base-2k'):
+    def __init__(self, model_name: str = 'blanchefort/rubert-base-cased-sentiment'):
         print("Инициализация анализатора тональности...")
         
         # Трансформер для анализа тональности
@@ -49,9 +24,6 @@ class SentimentAnalyzer:
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.model = self.model.to(self.device)
         print(f"Устройство: {self.device}")
-        
-        # LSTM для сглаживания временного ряда
-        self.lstm_smoother = None
 
     def predict_sentiment(self, texts: List[str], batch_size: int = 8) -> List[float]:
         """
@@ -78,98 +50,17 @@ class SentimentAnalyzer:
                 ).to(self.device)
                 
                 logits = self.model(**inputs).logits
-                proba = torch.sigmoid(logits).cpu().numpy()
+                proba = torch.softmax(logits, dim=1).cpu().numpy()
                 
                 sentiment_out.extend([float(p[0]) for p in proba])
         
         return sentiment_out
-    
-    def train_lstm_smoother(self, data: List[float], hidden_size: int = 32, 
-                           num_layers: int = 2, epochs: int = 100, 
-                           lr: float = 0.01, patience: int = 10) -> LSTMSmoother:
-        """
-        Обучает LSTM модель для сглаживания временного ряда
-        
-        Args:
-            data: исходные данные тональности
-            hidden_size: размер скрытого слоя LSTM
-            num_layers: количество слоев LSTM
-            epochs: максимальное количество эпох
-            lr: learning rate
-            patience: количество эпох без улучшения для early stopping
-        """
-        if len(data) < 10:
-            return None
-        
-        print(f"\nОбучение LSTM сглаживателя...")
-        print(f"Архитектура: {num_layers} слоя, hidden_size={hidden_size}")
-        
-        # Инициализируем модель
-        model = LSTMSmoother(hidden_size, num_layers).to(self.device)
-        
-        # Подготовка данных
-        data_tensor = torch.FloatTensor(data).unsqueeze(0).unsqueeze(-1).to(self.device)
-        target = data_tensor.clone()
-        
-        # Оптимизация с weight decay для регуляризации
-        optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
-        criterion = nn.MSELoss()
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode='min', factor=0.5, patience=5
-        )
-        
-        # Early stopping
-        best_loss = float('inf')
-        patience_counter = 0
-        
-        model.train()
-        for epoch in range(epochs):
-            optimizer.zero_grad()
-            output = model(data_tensor)
-            loss = criterion(output, target.squeeze(-1))
-            loss.backward()
-            
-            # Gradient clipping для стабильности
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            
-            optimizer.step()
-            scheduler.step(loss)
-            
-            # Early stopping
-            if loss.item() < best_loss:
-                best_loss = loss.item()
-                patience_counter = 0
-            else:
-                patience_counter += 1
-            
-            if (epoch + 1) % 20 == 0:
-                print(f"Эпоха {epoch + 1}/{epochs}, Loss: {loss.item():.6f}, LR: {optimizer.param_groups[0]['lr']:.6f}")
-            
-            if patience_counter >= patience:
-                print(f"Early stopping на эпохе {epoch + 1}")
-                break
-        
-        print(f"Обучение завершено. Финальная loss: {best_loss:.6f}")
-        return model
-    
-    def apply_lstm_smoothing(self, data: List[float], lstm_model: LSTMSmoother) -> List[float]:
-        """Применяет обученную LSTM модель для сглаживания"""
-        if lstm_model is None or len(data) < 10:
-            return data
-        
-        lstm_model.eval()
-        data_tensor = torch.FloatTensor(data).unsqueeze(0).unsqueeze(-1).to(self.device)
-        
-        with torch.no_grad():
-            smoothed = lstm_model(data_tensor)
-            smoothed = smoothed.cpu().numpy()[0]
-        
-        return smoothed.tolist() 
+
     
 class YouTubeSentimentAnalyzer(SentimentAnalyzer):
     """Класс для анализа тональности YouTube комментариев"""
     
-    def __init__(self, model_name: str = 'Tochka-AI/ruRoPEBert-classic-base-2k'):
+    def __init__(self, model_name: str = 'blanchefort/rubert-base-cased-sentiment'):
         super().__init__(model_name)
 
     def load_comments_from_json(self, json_file: str) -> List[Dict]:
@@ -181,10 +72,6 @@ class YouTubeSentimentAnalyzer(SentimentAnalyzer):
     def analyze_from_json(self, json_file: str,
                          output_plot: str = 'sentiment_analysis.png',
                          output_pie_chart: str = 'sentiment_pie_chart.png',
-                         use_lstm_smoothing: bool = True,
-                         lstm_hidden_size: int = 64,
-                         lstm_layers: int = 2,
-                         lstm_epochs: int = 100,
                          batch_size: int = 8) -> Dict:
         """
         Анализирует тональность комментариев из JSON
@@ -193,10 +80,6 @@ class YouTubeSentimentAnalyzer(SentimentAnalyzer):
             json_file: путь к JSON файлу с комментариями
             output_plot: путь для сохранения графика
             output_pie_chart: путь для сохранения круговой диаграммы
-            use_lstm_smoothing: использовать LSTM сглаживание
-            lstm_hidden_size: размер скрытого слоя LSTM
-            lstm_layers: количество слоев LSTM
-            lstm_epochs: количество эпох обучения LSTM
             batch_size: размер батча для анализа тональности
             
         Returns:
@@ -229,23 +112,11 @@ class YouTubeSentimentAnalyzer(SentimentAnalyzer):
         sentiments = self.predict_sentiment(texts, batch_size=batch_size)
         print(f"✓ Анализ завершен")
         
-        # Применяем LSTM сглаживание
-        filtered_sentiments = sentiments
-        if use_lstm_smoothing and len(sentiments) > 10:
-            lstm_model = self.train_lstm_smoother(
-                sentiments, 
-                hidden_size=lstm_hidden_size,
-                num_layers=lstm_layers,
-                epochs=lstm_epochs
-            )
-            filtered_sentiments = self.apply_lstm_smoothing(sentiments, lstm_model)
-            print(f"✓ LSTM сглаживание применено")
-        
         # Создаем график
-        self._create_plot(sentiments, filtered_sentiments, output_plot, use_lstm_smoothing)
+        self._create_plot(sentiments, output_plot)
         
         # Статистика
-        results = self._calculate_statistics(comments, sentiments, filtered_sentiments, output_plot)
+        results = self._calculate_statistics(comments, sentiments, output_plot)
         self._print_statistics(results)
 
         # Создаем круговую диаграмму
@@ -265,23 +136,19 @@ class YouTubeSentimentAnalyzer(SentimentAnalyzer):
         plt.pie(sizes, explode=explode, labels=labels, colors=colors,
                 autopct='%1.1f%%', shadow=True, startangle=140)
         plt.title('Распределение тональности комментариев', fontsize=14, fontweight='bold')
-        plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        plt.axis('equal')
         plt.savefig(output_pie_chart)
         plt.close()
 
         print(f"✓ Круговая диаграмма сохранена: {output_pie_chart}")
     
-    def _create_plot(self, sentiments: List[float], filtered: List[float], 
-                    output_plot: str, use_smoothing: bool):
+    def _create_plot(self, sentiments: List[float], output_plot: str):
         """Создает и сохраняет график анализа"""
         plt.figure(figsize=(14, 7), dpi=300)
         
         # Основной график
         plt.subplot(2, 1, 1)
-        plt.plot(sentiments, alpha=0.4, label='Исходные данные', color='#3498db', linewidth=1)
-        
-        if use_smoothing:
-            plt.plot(filtered, linewidth=2.5, label='LSTM сглаживание', color='#e74c3c')
+        plt.plot(sentiments, label='Тональность комментариев', color='#3498db', linewidth=1.5, alpha=0.8)
         
         plt.xlabel('Номер комментария', fontsize=11)
         plt.ylabel('Тональность', fontsize=11)
@@ -308,7 +175,7 @@ class YouTubeSentimentAnalyzer(SentimentAnalyzer):
         print(f"✓ График сохранен: {output_plot}")
     
     def _calculate_statistics(self, comments: List[Dict], sentiments: List[float],
-                             filtered: List[float], output_plot: str) -> Dict:
+                             output_plot: str) -> Dict:
         """Вычисляет статистику анализа"""
         positive = sum(1 for s in sentiments if s > 0.6)
         negative = sum(1 for s in sentiments if s < 0.4)
@@ -328,7 +195,6 @@ class YouTubeSentimentAnalyzer(SentimentAnalyzer):
             "positive_percentage": (positive / len(sentiments)) * 100,
             "negative_percentage": (negative / len(sentiments)) * 100,
             "neutral_percentage": (neutral / len(sentiments)) * 100,
-            "smoothed_average": float(np.mean(filtered)),
             "output_plot": output_plot
         }
     
@@ -348,5 +214,4 @@ class YouTubeSentimentAnalyzer(SentimentAnalyzer):
         print(f"  • Позитивные (>0.6): {results['positive_comments']} ({results['positive_percentage']:.1f}%)")
         print(f"  • Нейтральные:       {results['neutral_comments']} ({results['neutral_percentage']:.1f}%)")
         print(f"  • Негативные (<0.4): {results['negative_comments']} ({results['negative_percentage']:.1f}%)")
-        print(f"\n🎯 Сглаженное среднее: {results['smoothed_average']:.3f}")
         print(f"{'='*60}\n")
